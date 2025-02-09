@@ -5,45 +5,66 @@ let wrongLetters = [];
 let maxAttempts = 6;
 let attempts = 0;
 
-const wordDisplay = document.getElementById("wordDisplay");
-const wrongLettersDisplay = document.getElementById("wrongLetters");
-const hangmanImage = document.getElementById("hangman");
-const letterInput = document.getElementById("letterInput");
-const guessButton = document.getElementById("guessButton");
-const restartButton = document.getElementById("restartButton");
-const messageDisplay = document.getElementById("message");
+const elements = {
+    wordDisplay: document.getElementById("wordDisplay"),
+    wrongLettersDisplay: document.getElementById("wrongLetters"),
+    hangmanImage: document.getElementById("hangman"),
+    letterInput: document.getElementById("letterInput"),
+    guessButton: document.getElementById("guessButton"),
+    restartButton: document.getElementById("restartButton"),
+    messageDisplay: document.getElementById("message")
+};
 
-function startGame() {
-    selectedWord = words[Math.floor(Math.random() * words.length)];
+function initializeGame() {
+    selectedWord = getRandomWord();
     guessedLetters = [];
     wrongLetters = [];
     attempts = 0;
     updateDisplay();
-    messageDisplay.textContent = "";
-    restartButton.style.display = "none";
+    elements.messageDisplay.textContent = "";
+    elements.restartButton.style.display = "none";
+    elements.guessButton.disabled = false;
+}
+
+function getRandomWord() {
+    return words[Math.floor(Math.random() * words.length)];
 }
 
 function updateDisplay() {
-    wordDisplay.textContent = selectedWord.split("").map(letter => (guessedLetters.includes(letter) ? letter : "_")).join(" ");
-    wrongLettersDisplay.textContent = `Wrong Letters: ${wrongLetters.join(", ")}`;
-    hangmanImage.src = `hangman${attempts}.png`;
-    
+    elements.wordDisplay.textContent = getWordDisplay();
+    elements.wrongLettersDisplay.textContent = `Wrong Letters: ${wrongLetters.join(", ")}`;
+    updateHangmanImage();
+    checkGameStatus();
+}
+
+function getWordDisplay() {
+    return selectedWord.split("").map(letter => (guessedLetters.includes(letter) ? letter : "_")).join(" ");
+}
+
+function updateHangmanImage() {
+    elements.hangmanImage.src = `./assets/images/hangman${attempts}.png`; // Ensure you have images named hangman0.png, hangman1.png, etc.
+}
+
+function checkGameStatus() {
     if (attempts >= maxAttempts) {
-        messageDisplay.textContent = `Game Over! The word was "${selectedWord}".`;
-        guessButton.disabled = true;
-        restartButton.style.display = "inline";
-    } else if (!wordDisplay.textContent.includes("_")) {
-        messageDisplay.textContent = "Congratulations! You've guessed the word!";
-        guessButton.disabled = true;
-        restartButton.style.display = "inline";
+        elements.messageDisplay.textContent = `Game Over! The word was "${selectedWord}".`;
+        endGame();
+    } else if (!elements.wordDisplay.textContent.includes("_")) {
+        elements.messageDisplay.textContent = "Congratulations! You've guessed the word!";
+        endGame();
     }
 }
 
-guessButton.addEventListener("click", () => {
-    const letter = letterInput.value.toLowerCase();
-    letterInput.value = "";
-    
-    if (letter && !guessedLetters.includes(letter) && !wrongLetters.includes(letter)) {
+function endGame() {
+    elements.guessButton.disabled = true;
+    elements.restartButton.style.display = "inline";
+}
+
+function handleGuess() {
+    const letter = elements.letterInput.value.toLowerCase();
+    elements.letterInput.value = "";
+
+    if (isValidGuess(letter)) {
         if (selectedWord.includes(letter)) {
             guessedLetters.push(letter);
         } else {
@@ -52,8 +73,15 @@ guessButton.addEventListener("click", () => {
         }
         updateDisplay();
     }
-});
+}
 
-restartButton.addEventListener("click", startGame);
+function isValidGuess(letter) {
+    return letter && !guessedLetters.includes(letter) && !wrongLetters.includes(letter);
+}
 
-startGame();
+// Event Listeners
+elements.guessButton.addEventListener("click", handleGuess);
+elements.restartButton.addEventListener("click", initializeGame);
+
+// Start the game for the first time
+initializeGame();
